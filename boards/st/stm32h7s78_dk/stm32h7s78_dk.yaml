@@ -16,4 +16,6 @@ supported:
   - adc
   - pwm
   - counter
+  - spi
+  - octospi
 vendor: st
