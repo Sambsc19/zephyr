@@ -16,6 +16,7 @@
 #include <zephyr/dt-bindings/dma/stm32_dma.h>
 #include <zephyr/dt-bindings/memory-attr/memory-attr.h>
 #include <zephyr/dt-bindings/memory-attr/memory-attr-arm.h>
+#include <zephyr/dt-bindings/flash_controller/xspi.h>
 #include <freq.h>
 
 /*
@@ -82,7 +83,8 @@
 		compatible = "zephyr,memory-region";
 		reg = <0x70000000 DT_SIZE_M(256)>;
 		zephyr,memory-region = "EXTMEM";
-		zephyr,memory-attr = <( DT_MEM_ARM(ATTR_MPU_EXTMEM) )>;
+		/* The ATTR_MPU_EXTMEM attribut causing a MPU FAULT */
+		zephyr,memory-attr = <( DT_MEM_ARM(ATTR_MPU_IO) )>;
 	};
 
 	clocks {
@@ -780,6 +782,28 @@
 					STM32_ADC_RES(6, 0x03)>;
 			sampling-times = <3 7 13 25 48 93 248 641>;
 			st,adc-sequencer = <FULLY_CONFIGURABLE>;
+		};
+
+		xspi1: xspi@52005000 {
+			compatible = "st,stm32-xspi";
+			reg = <0x52005000 0x400>;
+			interrupts = <105 0>;
+			clock-names = "ospix";
+			clocks = <&rcc STM32_CLOCK_BUS_AHB5 0x00000020>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		xspi2: xspi@5200a000 {
+			compatible = "st,stm32-xspi";
+			reg = <0x5200a000 0x400>;
+			interrupts = <106 0>;
+			clock-names = "ospix";
+			clocks = <&rcc STM32_CLOCK_BUS_AHB5 0x000001000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
 		};
 
 		rng: rng@48020000 {
