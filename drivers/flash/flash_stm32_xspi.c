@@ -52,6 +52,11 @@ LOG_MODULE_REGISTER(flash_stm32_xspi, CONFIG_FLASH_LOG_LEVEL);
 #include <stm32_ll_dma.h>
 #endif /* STM32_XSPI_USE_DMA */
 
+#if defined(CONFIG_SOC_SERIES_STM32H7RSX)
+#include <stm32_ll_pwr.h>
+#include <stm32_ll_system.h>
+#endif /* CONFIG_SOC_SERIES_STM32H7RSX */
+
 #include "flash_stm32_xspi.h"
 
 static inline void xspi_lock_thread(const struct device *dev)
@@ -190,7 +195,9 @@ static XSPI_RegularCmdTypeDef xspi_prepare_cmd(const uint8_t transfer_mode,
 		.DQSMode = (transfer_rate == XSPI_DTR_TRANSFER)
 				? HAL_XSPI_DQS_ENABLE
 				: HAL_XSPI_DQS_DISABLE,
+#ifdef XSPI_CCR_SIOO
 		.SIOOMode = HAL_XSPI_SIOO_INST_EVERY_CMD,
+#endif /* XSPI_CCR_SIOO */
 	};
 
 	switch (transfer_mode) {
@@ -773,7 +780,9 @@ static int stm32_xspi_mem_reset(const struct device *dev)
 		.DataLength = HAL_XSPI_DATA_NONE,
 		.DummyCycles = 0U,
 		.DQSMode = HAL_XSPI_DQS_DISABLE,
+#ifdef XSPI_CCR_SIOO
 		.SIOOMode = HAL_XSPI_SIOO_INST_EVERY_CMD,
+#endif /* XSPI_CCR_SIOO */
 	};
 
 	/* Reset enable in SPI mode and STR transfer mode */
@@ -874,7 +883,9 @@ static int flash_stm32_xspi_erase(const struct device *dev, off_t addr,
 		.DataMode = HAL_XSPI_DATA_NONE,
 		.DummyCycles = 0U,
 		.DQSMode = HAL_XSPI_DQS_DISABLE,
+#ifdef XSPI_CCR_SIOO
 		.SIOOMode = HAL_XSPI_SIOO_INST_EVERY_CMD,
+#endif /* XSPI_CCR_SIOO */
 	};
 
 	xspi_lock_thread(dev);
@@ -1835,6 +1846,11 @@ static int flash_stm32_xspi_init(const struct device *dev)
 		LOG_ERR("XSPI mode SPI|DUAL|QUAD/DTR is not valid");
 		return -ENOTSUP;
 	}
+#if defined(CONFIG_SOC_SERIES_STM32H7RSX)
+	LL_PWR_EnableXSPIM2();
+	__HAL_RCC_SBS_CLK_ENABLE();
+	LL_SBS_EnableXSPI2SpeedOptim();
+#endif /* CONFIG_SOC_SERIES_STM32H7RSX */
 
 	/* Signals configuration */
 	ret = pinctrl_apply_state(dev_cfg->pcfg, PINCTRL_STATE_DEFAULT);
@@ -1917,15 +1933,15 @@ static int flash_stm32_xspi_init(const struct device *dev)
 	if (dev_cfg->data_rate == XSPI_DTR_TRANSFER) {
 		dev_data->hxspi.Init.MemoryType = HAL_XSPI_MEMTYPE_MACRONIX;
 		dev_data->hxspi.Init.DelayHoldQuarterCycle = HAL_XSPI_DHQC_ENABLE;
-	} else {
-
 	}
 #if STM32_XSPI_DLYB_BYPASSED
 	dev_data->hxspi.Init.DelayBlockBypass = HAL_XSPI_DELAY_BLOCK_BYPASS;
-#else
-	dev_data->hxspi.Init.DelayBlockBypass = HAL_XSPI_DELAY_BLOCK_ON;
 #endif /* STM32_XSPI_DLYB_BYPASSED */
 
+#if defined(CONFIG_SOC_SERIES_STM32H7RSX)
+	dev_data->hxspi.Init.MaxTran = 0;
+	dev_data->hxspi.Init.MemorySelect = HAL_XSPI_CSSEL_NCS1;
+#endif /* CONFIG_SOC_SERIES_STM32H7RSX */
 
 	if (HAL_XSPI_Init(&dev_data->hxspi) != HAL_OK) {
 		LOG_ERR("XSPI Init failed");
@@ -1934,7 +1950,8 @@ static int flash_stm32_xspi_init(const struct device *dev)
 
 	LOG_DBG("XSPI Init'd");
 
-#if defined(HAL_XSPIM_IOPORT_1) || defined(HAL_XSPIM_IOPORT_2)
+#if defined(HAL_XSPIM_IOPORT_1) || defined(HAL_XSPIM_IOPORT_2) |\
+	defined(XSPIM) || defined(XSPIM1)|| defined(XSPIM2)
 	/* XSPI I/O manager init Function */
 	XSPIM_CfgTypeDef xspi_mgr_cfg;
 
@@ -1942,10 +1959,10 @@ static int flash_stm32_xspi_init(const struct device *dev)
 		xspi_mgr_cfg.IOPort = HAL_XSPIM_IOPORT_1;
 		xspi_mgr_cfg.nCSOverride = HAL_XSPI_CSSEL_OVR_NCS1;
 	} else if (dev_data->hxspi.Instance == XSPI2) {
-		ospi_mgr_cfg.IOPort = HAL_XSPIM_IOPORT_2;
-		ospi_mgr_cfg.nCSOverride = HAL_XSPI_CSSEL_OVR_NCS2;
+		xspi_mgr_cfg.IOPort = HAL_XSPIM_IOPORT_2;
+		xspi_mgr_cfg.nCSOverride = HAL_XSPI_CSSEL_OVR_NCS2;
 	}
-	ospi_mgr_cfg.Req2AckTime = 1;
+	xspi_mgr_cfg.Req2AckTime = 1;
 
 	if (HAL_XSPIM_Config(&dev_data->hxspi, &xspi_mgr_cfg,
 		HAL_XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) {
@@ -1955,7 +1972,9 @@ static int flash_stm32_xspi_init(const struct device *dev)
 
 #endif /* XSPIM */
 
-#if defined(DLYB_XSPI1) || defined(DLYB_XSPI2) || defined(DLYB_OCTOSPI1) || defined(DLYB_OCTOSPI2)
+#if !defined (CONFIG_SOC_SERIES_STM32H7RSX) && \
+	(defined(DLYB_XSPI1) || defined(DLYB_XSPI2) || defined(DLYB_OCTOSPI1) || defined(DLYB_OCTOSPI2) )
+
 	/* XSPI delay block init Function */
 	HAL_XSPI_DLYB_CfgTypeDef xspi_delay_block_cfg = {0};
 
