@@ -49,6 +49,10 @@ tests:
     extra_args: DTC_OVERLAY_FILE=boards/stm32h7_wwdg.overlay
     filter: dt_compat_enabled("st,stm32-window-watchdog")
     platform_allow: nucleo_h743zi
+  sample.drivers.watchdog.stm32h7rs_wwdg:
+    extra_args: DTC_OVERLAY_FILE=boards/stm32h7rs_wwdg.overlay
+    filter: dt_compat_enabled("st,stm32-window-watchdog")
+    platform_allow: stm32h7s78_dk
   sample.drivers.watchdog.stm32_iwdg:
     extra_args: DTC_OVERLAY_FILE=boards/stm32_iwdg.overlay
     filter: dt_compat_enabled("st,stm32-watchdog")
