@@ -12,5 +12,8 @@ supported:
   - uart
   - watchdog
   - entropy
+  - dma
   - adc
+  - pwm
+  - counter
 vendor: st
