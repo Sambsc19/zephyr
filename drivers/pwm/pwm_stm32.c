@@ -237,6 +237,12 @@ static int get_tim_clk(const struct stm32_pclken *pclken, uint32_t *tim_clk)
 	} else {
 		apb_psc = STM32_D2PPRE2;
 	}
+#elif defined(CONFIG_SOC_SERIES_STM32H7RSX)
+	if (pclken->bus == STM32_CLOCK_BUS_APB1) {
+		apb_psc = STM32_PPRE1;
+	} else {
+		apb_psc = STM32_PPRE2;
+	}
 #else
 	if (pclken->bus == STM32_CLOCK_BUS_APB1) {
 #if defined(CONFIG_SOC_SERIES_STM32MP1X)
@@ -271,7 +277,12 @@ static int get_tim_clk(const struct stm32_pclken *pclken, uint32_t *tim_clk)
 	 * TIMPRE=1).
 	 */
 
+#if defined(CONFIG_SOC_SERIES_STM32H7RSX)
+	/* Same function but different naming (bz183675) */
+	if (LL_RCC_GetTIMPrescaler() == LL_RCC_TIM_PRESCALER_DISABLE) {
+#else
 	if (LL_RCC_GetTIMPrescaler() == LL_RCC_TIM_PRESCALER_TWICE) {
+#endif /* CONFIG_SOC_SERIES_STM32H7X */
 		/* TIMPRE = 0 */
 		if (apb_psc <= 2u) {
 			LL_RCC_ClocksTypeDef clocks;
