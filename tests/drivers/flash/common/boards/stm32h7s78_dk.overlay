@@ -1,0 +1,21 @@
+/*
+ * Copyright (c) 2024, STMicroelectronics
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+&flash0 {
+	partitions {
+	/delete-node/ boot_partition;
+	/* reduce the boot partition to give a small storage one */
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x00000000 DT_SIZE_K(60)>;
+		};
+
+		storage_partition: partition@f000 {
+			label = "storage";
+			reg = <0x0000f000 DT_SIZE_K(4)>;
+		};
+	};
+};
