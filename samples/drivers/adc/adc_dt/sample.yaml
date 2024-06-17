@@ -13,6 +13,7 @@ tests:
       - cy8cproto_063_ble
       - stm32l496g_disco
       - stm32h735g_disco
+      - stm32h7s78_dk
       - nrf51dk/nrf51822
       - nrf52840dk/nrf52840
       - nrf54l15pdk/nrf54l15/cpuapp
