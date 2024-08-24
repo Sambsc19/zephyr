@@ -1,0 +1,16 @@
+identifier: nucleo_h7s3l8
+name: ST NUCLEO_H7S3L8
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+ram: 640
+flash: 64
+supported:
+  - arduino_gpio
+  - gpio
+  - uart
+  - watchdog
+  - entropy
+  - adc
+vendor: st
