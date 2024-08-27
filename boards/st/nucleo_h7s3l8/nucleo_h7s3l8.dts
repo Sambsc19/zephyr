@@ -23,6 +23,14 @@
 		// zephyr,code-partition = &slot0_partition;
 	};
 
+	// ext_memory: memory@70000000 {
+	// 	compatible = "zephyr,memory-region";
+	// 	reg = <0x70000000 DT_SIZE_M(256)>; /* max addressable area */
+	// 	zephyr,memory-region = "EXTFLASH";
+	// 	/* The ATTR_MPU_EXTMEM attribut causing a MPU FAULT */
+	// 	zephyr,memory-attr = <( DT_MEM_ARM(ATTR_MPU_IO) )>;
+	// };
+
 	leds {
 		 compatible = "gpio-leds";
 		 green_led: led_1 {
