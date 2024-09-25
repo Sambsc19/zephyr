@@ -220,7 +220,7 @@ static int lis2dux12_sample_fetch_temp(const struct device *dev)
 		return -EIO;
 	}
 
-	data->sample_temp = temp_data.heat.deg_c;
+	data->sample_temp = sys_le16_to_cpu(temp_data.heat.deg_c);
 
 	return 0;
 }

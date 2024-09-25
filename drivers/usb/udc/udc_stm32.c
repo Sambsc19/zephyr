@@ -931,8 +931,6 @@ static void priv_pcd_prepare(const struct device *dev)
 	priv->pcd.Init.dev_endpoints = cfg->num_endpoints;
 	priv->pcd.Init.ep0_mps = cfg->ep0_mps;
 	priv->pcd.Init.speed = PCD_SPEED_FULL;
-	priv->pcd.Init.low_power_enable = 0;
-	priv->pcd.Init.Sof_enable = 0; /* Usually not needed */
 
 	/* Per controller/Phy values */
 #if defined(USB)
@@ -941,20 +939,20 @@ static void priv_pcd_prepare(const struct device *dev)
 	priv->pcd.Instance = USB_DRD_FS;
 #elif defined(USB_OTG_FS) || defined(USB_OTG_HS)
 	priv->pcd.Init.speed = usb_dc_stm32_get_maximum_speed();
-	priv->pcd.Init.vbus_sensing_enable = DISABLE;
 #if DT_HAS_COMPAT_STATUS_OKAY(st_stm32_otghs)
 	priv->pcd.Instance = USB_OTG_HS;
 #else
 	priv->pcd.Instance = USB_OTG_FS;
 #endif
+#endif /* USB */
+
 #if USB_OTG_HS_EMB_PHY
 	priv->pcd.Init.phy_itface = USB_OTG_HS_EMBEDDED_PHY;
 #elif USB_OTG_HS_ULPI_PHY
 	priv->pcd.Init.phy_itface = USB_OTG_ULPI_PHY;
 #else
 	priv->pcd.Init.phy_itface = PCD_PHY_EMBEDDED;
-#endif
-#endif
+#endif /* USB_OTG_HS_EMB_PHY */
 }
 
 static const struct stm32_pclken pclken[] = STM32_DT_INST_CLOCKS(0);
@@ -967,14 +965,22 @@ static int priv_clock_enable(void)
 		LOG_ERR("clock control device not ready");
 		return -ENODEV;
 	}
+#if DT_HAS_COMPAT_STATUS_OKAY(st_stm32_otghs) && defined(CONFIG_SOC_SERIES_STM32H7RSX)
+	LL_PWR_EnableUSBReg();
+	LL_PWR_EnableUSBHSPHYReg();
+	LL_PWR_EnableUSBVoltageDetector();
 
-#if defined(PWR_USBSCR_USB33SV) || defined(PWR_SVMCR_USV)
+	__HAL_RCC_USB_OTG_HS_CLK_ENABLE();
+	/* Configuring the SYSCFG registers OTG_HS PHY : OTG_HS PHY enable*/
+	__HAL_RCC_USBPHYC_CLK_ENABLE();
+#elif defined(PWR_USBSCR_USB33SV) || defined(PWR_SVMCR_USV)
 	/*
 	 * VDDUSB independent USB supply (PWR clock is on)
 	 * with LL_PWR_EnableVDDUSB function (higher case)
 	 */
 	LL_PWR_EnableVDDUSB();
 #endif /* PWR_USBSCR_USB33SV or PWR_SVMCR_USV */
+
 #if defined(CONFIG_SOC_SERIES_STM32H7X)
 	LL_PWR_EnableUSBVoltageDetector();
 
@@ -998,7 +1004,9 @@ static int priv_clock_enable(void)
 		LOG_ERR("Unable to enable USB clock");
 		return -EIO;
 	}
-
+#if defined(CONFIG_SOC_SERIES_STM32H7RSX) && DT_HAS_COMPAT_STATUS_OKAY(st_stm32_otghs)
+	/* USB OTG HS receives the 60MHz from RCC : no domain clock expected */
+#else
 	if (IS_ENABLED(CONFIG_USB_DC_STM32_CLOCK_CHECK)) {
 		uint32_t usb_clock_rate;
 
@@ -1013,6 +1021,7 @@ static int priv_clock_enable(void)
 			LOG_ERR("USB Clock is not 48MHz (%d)", usb_clock_rate);
 			return -ENOTSUP;
 		}
+#endif
 	}
 
 	/* Previous check won't work in case of F1/F3. Add build time check */
@@ -1037,6 +1046,10 @@ static int priv_clock_enable(void)
 	 */
 #if defined(CONFIG_SOC_SERIES_STM32H7X)
 	LL_AHB1_GRP1_DisableClockSleep(LL_AHB1_GRP1_PERIPH_USB1OTGHSULPI);
+
+#elif defined(CONFIG_SOC_SERIES_STM32H7RSX)
+	LL_AHB1_GRP1_DisableClockSleep(LL_AHB1_GRP1_PERIPH_USBOTGHS ||
+					LL_AHB1_GRP1_PERIPH_USBPHYC);
 #else
 	LL_AHB1_GRP1_DisableClockLowPower(LL_AHB1_GRP1_PERIPH_OTGHSULPI);
 #endif /* defined(CONFIG_SOC_SERIES_STM32H7X) */
