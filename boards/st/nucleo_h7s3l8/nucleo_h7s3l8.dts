@@ -17,10 +17,10 @@
 	chosen {
 		zephyr,console = &uart4;
 		zephyr,shell-uart = &uart4;
-		zephyr,flash = &flash0;
+		zephyr,flash = &mx66uw1g45; //&flash0;          /* Updated to point to the external flash controller */
 		zephyr,sram = &sram0;
 		zephyr,flash-controller = &mx66uw1g45;
-		// zephyr,code-partition = &slot0_partition;
+		zephyr,code-partition = &slot0_partition; //was commented in diff  /* Ensure this points to the correct partition */
 	};
 
 	// ext_memory: memory@70000000 {
@@ -122,63 +122,121 @@
 	};
 };
 
-&flash0 {
-	partitions {
-		compatible = "fixed-partitions";
-		#address-cells = <1>;
-		#size-cells = <1>;
+// &flash0 {
+// 	partitions {
+// 		compatible = "fixed-partitions";
+// 		#address-cells = <1>;
+// 		#size-cells = <1>;
 
-		/* Set the partitions with first MB to make use of the whole Bank1 */
-		boot_partition: partition@0 {
-			label = "mcuboot";
-			reg = <0x00000000 DT_SIZE_K(64)>;
-		};
-		/* Dummy slot0 out of the internal flash area just for sysbuild */
-		slot0_partition: partition@10000 {
-				label = "image-0";
-				reg = <0x00010000 DT_SIZE_K(416)>;
-		};
-	};
+// 		/* Set the partitions with first MB to make use of the whole Bank1 */
+// 		boot_partition: partition@0 {
+// 			label = "mcuboot";
+// 			reg = <0x00000000 DT_SIZE_K(64)>;
+// 		};
+// 		/* Dummy slot0 out of the internal flash area just for sysbuild */
+// 		slot0_partition: partition@10000 {
+// 				label = "image-0";
+// 				reg = <0x00010000 DT_SIZE_K(416)>;
+// 		};
+// 	};
+// };
+
+&flash0 {
+    partitions {
+        compatible = "fixed-partitions";
+        #address-cells = <1>;
+        #size-cells = <1>;
+
+        boot_partition: partition@0 {
+            label = "mcuboot";
+            reg = <0x00000000 DT_SIZE_K(64)>;
+        };
+        /* Removed unnecessary internal flash partition */
+    };
 };
 
+// &xspi2 {
+// 	pinctrl-0 = <&xspim_p2_clk_pn6 &xspim_p2_ncs1_pn1
+// 		     &xspim_p2_io0_pn2 &xspim_p2_io1_pn3
+// 		     &xspim_p2_io2_pn4 &xspim_p2_io3_pn5
+// 		     &xspim_p2_io4_pn8 &xspim_p2_io5_pn9
+// 		     &xspim_p2_io6_pn10 &xspim_p2_io7_pn11
+// 		     &xspim_p2_dqs0_pn0>;
+// 	pinctrl-names = "default";
+
+// 	status = "okay";
+
+// 	mx66uw1g45: xspi-nor-flash@70000000 {
+// 		compatible = "st,stm32-xspi-nor";
+// 		reg = <0x70000000 DT_SIZE_M(128)>; /* 1 Gbits */
+// 		ospi-max-frequency = <DT_FREQ_M(50)>;
+// 		spi-bus-width = <XSPI_OCTO_MODE>;
+// 		data-rate = <XSPI_DTR_TRANSFER>;
+// 		status = "okay";
+
+// 		partitions {
+// 			compatible = "fixed-partitions";
+// 			#address-cells = <1>;
+// 			#size-cells = <1>;
+
+// 			slot1_partition: partition@0 {
+// 				label = "image-1";
+// 				reg = <0x00000000 DT_SIZE_K(416)>;
+// 			};
+// 			scratch_partition: partition@e0000 {
+// 				label = "image-scratch";
+// 				reg = <0x000e0000 DT_SIZE_K(64)>;
+// 			};
+// 			storage_partition: partition@f0000 {
+// 				label = "storage";
+// 				reg = <0x000f0000 DT_SIZE_K(64)>;
+// 			};
+// 		};
+// 	};
+// };
+
 &xspi2 {
-	pinctrl-0 = <&xspim_p2_clk_pn6 &xspim_p2_ncs1_pn1
-		     &xspim_p2_io0_pn2 &xspim_p2_io1_pn3
-		     &xspim_p2_io2_pn4 &xspim_p2_io3_pn5
-		     &xspim_p2_io4_pn8 &xspim_p2_io5_pn9
-		     &xspim_p2_io6_pn10 &xspim_p2_io7_pn11
-		     &xspim_p2_dqs0_pn0>;
-	pinctrl-names = "default";
+    pinctrl-0 = <&xspim_p2_clk_pn6 &xspim_p2_ncs1_pn1
+                 &xspim_p2_io0_pn2 &xspim_p2_io1_pn3
+                 &xspim_p2_io2_pn4 &xspim_p2_io3_pn5
+                 &xspim_p2_io4_pn8 &xspim_p2_io5_pn9
+                 &xspim_p2_io6_pn10 &xspim_p2_io7_pn11
+                 &xspim_p2_dqs0_pn0>;
+    pinctrl-names = "default";
 
-	status = "okay";
+    status = "okay";
 
-	mx66uw1g45: xspi-nor-flash@70000000 {
-		compatible = "st,stm32-xspi-nor";
-		reg = <0x70000000 DT_SIZE_M(128)>; /* 1 Gbits */
-		ospi-max-frequency = <DT_FREQ_M(50)>;
-		spi-bus-width = <XSPI_OCTO_MODE>;
-		data-rate = <XSPI_DTR_TRANSFER>;
-		status = "okay";
+    mx66uw1g45: xspi-nor-flash@70000000 {
+        compatible = "st,stm32-xspi-nor";
+        reg = <0x70000000 DT_SIZE_M(128)>; /* 1 Gbits */
+        ospi-max-frequency = <DT_FREQ_M(50)>;
+        spi-bus-width = <XSPI_OCTO_MODE>;
+        data-rate = <XSPI_DTR_TRANSFER>;
+        status = "okay";
 
-		partitions {
-			compatible = "fixed-partitions";
-			#address-cells = <1>;
-			#size-cells = <1>;
+        partitions {
+            compatible = "fixed-partitions";
+            #address-cells = <1>;
+            #size-cells = <1>;
 
-			slot1_partition: partition@0 {
-				label = "image-1";
-				reg = <0x00000000 DT_SIZE_K(416)>;
-			};
-			scratch_partition: partition@e0000 {
-				label = "image-scratch";
-				reg = <0x000e0000 DT_SIZE_K(64)>;
-			};
-			storage_partition: partition@f0000 {
-				label = "storage";
-				reg = <0x000f0000 DT_SIZE_K(64)>;
-			};
-		};
-	};
+            slot0_partition: partition@0 {   /* This should be correctly identified */
+                label = "image-0";
+                reg = <0x00000000 DT_SIZE_K(416)>;
+            };
+            slot1_partition: partition@e0000 {
+                label = "image-1";
+                reg = <0x000e0000 DT_SIZE_K(416)>;
+            };
+            scratch_partition: partition@1c0000 {
+                label = "image-scratch";
+                reg = <0x001c0000 DT_SIZE_K(64)>;
+            };
+            storage_partition: partition@1d0000 {
+                label = "storage";
+                reg = <0x001d0000 DT_SIZE_K(64)>;
+            };
+        };
+    };
 };
 
 &clk_hsi48 {
