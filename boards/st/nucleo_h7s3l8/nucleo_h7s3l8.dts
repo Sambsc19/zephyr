@@ -63,41 +63,30 @@
 };
 
 // &flash0 {
-//     partitions {
-//         compatible = "fixed-partitions";
-//         #address-cells = <1>;
-//         #size-cells = <1>;
+// 	// compatible = "st,stm32h7-flash";
+// 	// reg = <0x08000000 0x10000>; /* 64KB Flash */
+// 	// label = "FLASH";
 
-//         /*
-//          * Following flash partition is dedicated to the use of nucleo_u575ziq
-//          * with TZEN=0 (so w/o TFM).
-//          * Set the partitions with first MB to make use of the whole Bank1
-//          */
-//         boot_partition: partition@0 {
-//             label = "mcuboot";
-//             reg = <0x00000000 DT_SIZE_K(48)>;
-//         };
-//         slot0_partition: partition@c000 {
-//             label = "image-0";
-//             reg = <0x0000c000 DT_SIZE_K(640)>;
-//         };
-//         slot1_partition: partition@ac000 {
-//             label = "image-1";
-//             reg = <0x000ac000 DT_SIZE_K(640)>;
-//         };
-//         scratch_partition: partition@14c000 {
-//             label = "image-scratch";
-//             reg = <0x0014C000 DT_SIZE_K(64)>;
-//         };
-//         storage_partition: partition@15c000 {
-//             label = "storage";
-//             reg = <0x0015c000 DT_SIZE_K(64)>;
-//         };
-//         certs_partition: partition@16c000 {
-//             label = "certs_storage";
-//             reg = <0x0016c000 DT_SIZE_K(16)>;
-//         };
-//     };
+// 	partitions {
+// 		compatible = "fixed-partitions";
+// 		#address-cells = <1>;
+// 		#size-cells = <1>;
+
+// 		boot_partition: partition@0 {
+// 			label = "mcuboot";
+// 			reg = <0x00000000 DT_SIZE_K(48)>; /* 32KB for MCUboot */
+// 		};
+
+// 		slot0_partition: partition@C000 {
+// 			label = "image-0";
+// 			reg = <0x0000C000 DT_SIZE_K(8)>; /* 16B for Application */
+// 		};
+
+// 		slot1_partition: partition@E000 {
+// 			label = "image-1";
+// 			reg = <0x000E000 DT_SIZE_K(8)>; /* 16KB for Secondary Application Slot */
+// 		};
+// 	};
 // };
 
 &clk_hsi48 {
