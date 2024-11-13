@@ -6,3 +6,5 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(hello_world_xip)
 
 target_sources(app PRIVATE src/main.c)
+zephyr_include_directories(${ZEPHYR_BASE}/modules/hal/stm32/dts)
+
