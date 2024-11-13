@@ -190,6 +190,10 @@ SECTIONS
 
 	__rodata_region_start = .;
 #include <zephyr/linker/common-rom.ld>
+/* Located in generated directory. This file is populated by calling
+ * zephyr_linker_sources(ROM_SECTIONS ...). Useful for grouping iterable RO structs.
+ */
+#include <snippets-rom-sections.ld>
 #include <zephyr/linker/thread-local-storage.ld>
 
     SECTION_PROLOGUE(_RODATA_SECTION_NAME,,)
@@ -227,7 +231,7 @@ SECTIONS
 		/*
 		 * QEMU doesn't vet each instruction fetch individually.
 		 * Instead, it grabs a whole page and perform dynamic
-		 * transation on it in a batch. It therefore validates
+		 * translation on it in a batch. It therefore validates
 		 * PMP permissions using page-sized and -aligned chunks.
 		 */
 		. = ALIGN(0x1000);

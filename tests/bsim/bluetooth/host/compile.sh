@@ -20,6 +20,7 @@ ${ZEPHYR_BASE}/tests/bsim/bluetooth/host/security/compile.sh
 
 app=tests/bsim/bluetooth/host/iso/cis compile
 app=tests/bsim/bluetooth/host/iso/bis compile
+app=tests/bsim/bluetooth/host/iso/frag_2 compile
 
 app=tests/bsim/bluetooth/host/misc/disable compile
 app=tests/bsim/bluetooth/host/misc/disconnect/dut compile
@@ -27,8 +28,11 @@ app=tests/bsim/bluetooth/host/misc/disconnect/tester compile
 app=tests/bsim/bluetooth/host/misc/conn_stress/central compile
 app=tests/bsim/bluetooth/host/misc/conn_stress/peripheral compile
 app=tests/bsim/bluetooth/host/misc/hfc compile
+app=tests/bsim/bluetooth/host/misc/hfc_multilink/dut compile
+app=tests/bsim/bluetooth/host/misc/hfc_multilink/tester compile
 app=tests/bsim/bluetooth/host/misc/unregister_conn_cb compile
 app=tests/bsim/bluetooth/host/misc/sample_test compile
+app=tests/bsim/bluetooth/host/misc/acl_tx_frag compile
 
 app=tests/bsim/bluetooth/host/privacy/central compile
 app=tests/bsim/bluetooth/host/privacy/peripheral compile

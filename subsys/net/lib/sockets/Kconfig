@@ -136,6 +136,7 @@ config NET_SOCKETS_SERVICE_THREAD_PRIO
 config NET_SOCKETS_SERVICE_STACK_SIZE
 	int "Stack size for the thread handling socket services"
 	default 2400 if NET_DHCPV4_SERVER
+	default 1400 if MDNS_RESPONDER
 	default 1200
 	depends on NET_SOCKETS_SERVICE
 	help
@@ -215,13 +216,13 @@ config NET_SOCKETS_DTLS_MAX_FRAGMENT_LENGTH
 config NET_SOCKETS_DTLS_SENDMSG_BUF_SIZE
 	int "Intermediate buffer size for DTLS sendmsg()"
 	depends on NET_SOCKETS_ENABLE_DTLS
-	range 0 65535
+	range 0 $(UINT16_MAX)
 	default 0
 	help
 	  Size of the intermediate buffer for DTLS sendmsg() function. The
 	  intermediate buffer is needed, as sendmsg() for DGRAM is expected to
 	  send all of the data in a single datagram, therefore all data provided
-	  in msghdr strucure need to be linearized before passing to mbed TLS.
+	  in msghdr structure need to be linearized before passing to mbed TLS.
 	  The buffer size can be set to 0, in that case data linearizing for
 	  DTLS sockets is disabled. In result, sendmsg() will only accept msghdr
 	  with a single non-empty iov buffer.
@@ -377,16 +378,28 @@ config NET_SOCKETPAIR_STATIC
 
 config NET_SOCKETPAIR_HEAP
 	bool "Use heap for allocating socketpairs"
-	depends on HEAP_MEM_POOL_SIZE != 0
 
 endchoice
 
 if NET_SOCKETPAIR_STATIC
+
 config NET_SOCKETPAIR_MAX
 	int "How many socketpairs to pre-allocate"
+	default 6 if WIFI_NM_WPA_SUPPLICANT
 	default 1
-endif
-endif
+
+endif # NET_SOCKETPAIR_STATIC
+
+if NET_SOCKETPAIR_HEAP
+
+config HEAP_MEM_POOL_ADD_SIZE_SOCKETPAIR
+	int
+	default 32000 if WIFI_NM_WPA_SUPPLICANT
+	default 256
+
+endif # NET_SOCKETPAIR_HEAP
+
+endif # NET_SOCKETPAIR
 
 config NET_SOCKETS_NET_MGMT
 	bool "Network management socket support [EXPERIMENTAL]"
@@ -396,6 +409,10 @@ config NET_SOCKETS_NET_MGMT
 	help
 	  Select this if you want to use socket API to get network
 	  managements events to your application.
+	  Note, that the thread using net_mgmt sockets should have at least
+	  the same priority as the thread processing network events (see
+	  CONFIG_NET_MGMT_EVENT_WORKER), otherwise in case of event bursts some
+	  events may be lost.
 
 config NET_SOCKETS_NET_MGMT_MAX_LISTENERS
 	int "Max number of sockets to listen"

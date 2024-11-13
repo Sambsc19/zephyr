@@ -1260,7 +1260,7 @@ static int cmd_config(const struct shell *sh, size_t argc, char *argv[])
 	uni_stream = shell_stream_from_bap_stream(bap_stream);
 	copy_unicast_stream_preset(uni_stream, named_preset);
 
-	/* If location has been modifed, we update the location in the codec configuration */
+	/* If location has been modified, we update the location in the codec configuration */
 	struct bt_audio_codec_cfg *codec_cfg = &uni_stream->codec_cfg;
 
 	for (size_t i = 0U; i < codec_cfg->data_len;) {
@@ -3477,7 +3477,7 @@ static int cmd_sync_broadcast(const struct shell *sh, size_t argc, char *argv[])
 				return -ENOEXEC;
 			}
 
-			bis_bitfield |= BIT(val);
+			bis_bitfield |= BT_ISO_BIS_INDEX_BIT(val);
 			stream_cnt++;
 		}
 	}
@@ -3954,7 +3954,7 @@ static int cmd_print_ase_info(const struct shell *sh, size_t argc, char *argv[])
 }
 #endif /* CONFIG_BT_BAP_UNICAST_SERVER */
 
-/* 31 is a unit separater - without t the tab is seemingly ignored*/
+/* 31 is a unit separator - without t the tab is seemingly ignored*/
 #define HELP_SEP "\n\31\t"
 
 #define HELP_CFG_DATA                                                                              \

@@ -1054,7 +1054,7 @@ static int mcux_lpuart_configure_async(const struct device *dev)
 			      mcux_lpuart_async_tx_timeout);
 
 	/* Disable the UART Receiver until the async API provides a buffer to
-	 * to receive into with rx_enable
+	 * receive into with rx_enable
 	 */
 	uart_config.enableRx = false;
 	/* Clearing the fifo of any junk received before the async rx enable was called */
@@ -1376,7 +1376,7 @@ static const struct mcux_lpuart_config mcux_lpuart_##n##_config = {     \
 	LPUART_MCUX_DECLARE_CFG(n)					\
 									\
 	DEVICE_DT_INST_DEFINE(n,					\
-			    &mcux_lpuart_init,				\
+			    mcux_lpuart_init,				\
 			    NULL,					\
 			    &mcux_lpuart_##n##_data,			\
 			    &mcux_lpuart_##n##_config,			\

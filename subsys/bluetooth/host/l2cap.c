@@ -853,14 +853,27 @@ static bool chan_has_credits(struct bt_l2cap_le_chan *lechan)
 #endif
 }
 
+__weak void bt_test_l2cap_data_pull_spy(struct bt_conn *conn,
+					struct bt_l2cap_le_chan *lechan,
+					size_t amount,
+					size_t *length)
+{
+}
+
 struct net_buf *l2cap_data_pull(struct bt_conn *conn,
 				size_t amount,
 				size_t *length)
 {
 	struct bt_l2cap_le_chan *lechan = get_ready_chan(conn);
 
+	if (IS_ENABLED(CONFIG_BT_TESTING)) {
+		/* Allow tests to snoop in */
+		bt_test_l2cap_data_pull_spy(conn, lechan, amount, length);
+	}
+
 	if (!lechan) {
 		LOG_DBG("no channel conn %p", conn);
+		bt_tx_irq_raise();
 		return NULL;
 	}
 
@@ -873,6 +886,7 @@ struct net_buf *l2cap_data_pull(struct bt_conn *conn,
 	struct net_buf *pdu = k_fifo_peek_head(&lechan->tx_queue);
 
 	if (!pdu) {
+		bt_tx_irq_raise();
 		return NULL;
 	}
 	/* __ASSERT(pdu, "signaled ready but no PDUs in the TX queue"); */
@@ -924,14 +938,16 @@ struct net_buf *l2cap_data_pull(struct bt_conn *conn,
 		__maybe_unused struct net_buf *b = k_fifo_get(&lechan->tx_queue, K_NO_WAIT);
 
 		__ASSERT_NO_MSG(b == pdu);
+	}
 
-		if (L2CAP_LE_CID_IS_DYN(lechan->tx.cid)) {
-			LOG_DBG("adding `sdu_sent` callback");
-			/* No user callbacks for SDUs */
-			make_closure(pdu->user_data,
-				     l2cap_chan_sdu_sent,
-				     UINT_TO_POINTER(lechan->tx.cid));
-		}
+	if (last_frag && L2CAP_LE_CID_IS_DYN(lechan->tx.cid)) {
+		bool sdu_end = last_frag && last_seg;
+
+		LOG_DBG("adding %s callback", sdu_end ? "`sdu_sent`" : "NULL");
+		/* No user callbacks for SDUs */
+		make_closure(pdu->user_data,
+			     sdu_end ? l2cap_chan_sdu_sent : NULL,
+			     sdu_end ? UINT_TO_POINTER(lechan->tx.cid) : NULL);
 	}
 
 	if (last_frag) {
@@ -1288,7 +1304,7 @@ static uint16_t le_err_to_result(int err)
 		return BT_L2CAP_LE_ERR_KEY_SIZE;
 	case -ENOTSUP:
 		/* This handle the cases where a fixed channel is registered but
-		 * for some reason (e.g. controller not suporting a feature)
+		 * for some reason (e.g. controller not supporting a feature)
 		 * cannot be used.
 		 */
 		return BT_L2CAP_LE_ERR_PSM_NOT_SUPP;
@@ -3054,6 +3070,20 @@ int bt_l2cap_chan_disconnect(struct bt_l2cap_chan *chan)
 	return 0;
 }
 
+__maybe_unused static bool user_data_not_empty(const struct net_buf *buf)
+{
+	size_t ud_len = sizeof(struct closure);
+	const uint8_t *ud = net_buf_user_data(buf);
+
+	for (size_t i = 0; i < ud_len; i++) {
+		if (ud[i] != 0) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static int bt_l2cap_dyn_chan_send(struct bt_l2cap_le_chan *le_chan, struct net_buf *buf)
 {
 	uint16_t sdu_len = buf->len;
@@ -3084,6 +3114,11 @@ static int bt_l2cap_dyn_chan_send(struct bt_l2cap_le_chan *le_chan, struct net_b
 		 * when allocating buffers intended for bt_l2cap_chan_send().
 		 */
 		LOG_DBG("Not enough headroom in buf %p", buf);
+		return -EINVAL;
+	}
+
+	CHECKIF(user_data_not_empty(buf)) {
+		LOG_DBG("Please clear user_data first");
 		return -EINVAL;
 	}
 

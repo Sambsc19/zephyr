@@ -234,7 +234,7 @@ void bt_conn_unref(struct bt_conn *conn);
 
 /** @brief Iterate through all bt_conn objects.
  *
- * Iterates trough all bt_conn objects that are alive in the Host allocator.
+ * Iterates through all bt_conn objects that are alive in the Host allocator.
  *
  * To find established connections, combine this with @ref bt_conn_get_info.
  * Check that @ref bt_conn_info.state is @ref BT_CONN_STATE_CONNECTED.
@@ -383,10 +383,6 @@ struct bt_security_info {
 	/** Flags. */
 	enum bt_security_flag flags;
 };
-
-/** Connection role (central or peripheral) */
-#define BT_CONN_ROLE_MASTER __DEPRECATED_MACRO BT_CONN_ROLE_CENTRAL
-#define BT_CONN_ROLE_SLAVE __DEPRECATED_MACRO BT_CONN_ROLE_PERIPHERAL
 
 /** Connection Info Structure */
 struct bt_conn_info {
@@ -901,7 +897,7 @@ int bt_conn_le_create_synced(const struct bt_le_ext_adv *adv,
  *  This uses the Auto Connection Establishment procedure.
  *  The procedure will continue until a single connection is established or the
  *  procedure is stopped through @ref bt_conn_create_auto_stop.
- *  To establish connections to all devices in the the filter accept list the
+ *  To establish connections to all devices in the filter accept list the
  *  procedure should be started again in the connected callback after a
  *  new connection has been established.
  *
@@ -1285,6 +1281,23 @@ int bt_conn_cb_unregister(struct bt_conn_cb *cb);
 	static const STRUCT_SECTION_ITERABLE(bt_conn_cb,		\
 						_CONCAT(bt_conn_cb_,	\
 							_name))
+
+/** Converts a security error to string.
+ *
+ * @return The string representation of the security error code.
+ *         If @kconfig{CONFIG_BT_SECURITY_ERR_TO_STR} is not enabled,
+ *         this just returns the empty string
+ */
+#if defined(CONFIG_BT_SECURITY_ERR_TO_STR)
+const char *bt_security_err_to_str(enum bt_security_err err);
+#else
+static inline const char *bt_security_err_to_str(enum bt_security_err err)
+{
+	ARG_UNUSED(err);
+
+	return "";
+}
+#endif
 
 /** @brief Enable/disable bonding.
  *

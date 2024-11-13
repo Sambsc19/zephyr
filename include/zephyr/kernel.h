@@ -1650,6 +1650,9 @@ static inline k_ticks_t z_impl_k_timer_expires_ticks(
  * This routine computes the time remaining before a running timer
  * next expires, in units of system ticks.  If the timer is not
  * running, it returns zero.
+ *
+ * @param timer The timer object
+ * @return Remaining time until expiration, in ticks
  */
 __syscall k_ticks_t k_timer_remaining_ticks(const struct k_timer *timer);
 
@@ -3457,7 +3460,7 @@ void k_work_queue_init(struct k_work_q *queue);
  *
  * @param stack pointer to the work thread stack area.
  *
- * @param stack_size size of the the work thread stack area, in bytes.
+ * @param stack_size size of the work thread stack area, in bytes.
  *
  * @param prio initial thread priority
  *

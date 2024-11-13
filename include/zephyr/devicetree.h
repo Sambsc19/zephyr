@@ -316,7 +316,7 @@
  *     DT_PROP(DT_INST(1, vnd_soc_serial), current_speed)
  *
  *     // 9600, because there is only one disabled node, and
- *     // disabled nodes are "at the the end" of the instance
+ *     // disabled nodes are "at the end" of the instance
  *     // number "list".
  *     DT_PROP(DT_INST(2, vnd_soc_serial), current_speed)
  * @endcode
@@ -788,7 +788,7 @@
  * - for type phandle, idx must be 0 and the expansion is a node
  *   identifier (this treats phandle like a phandles of length 1)
  *
- * - for type string, idx must be 0 and the expansion is the the
+ * - for type string, idx must be 0 and the expansion is the
  *   entire string (this treats string like string-array of length 1)
  *
  * These properties are handled as special cases:
@@ -4216,6 +4216,14 @@
 #define DT_INST_REG_SIZE(inst) DT_INST_REG_SIZE_BY_IDX(inst, 0)
 
 /**
+ * @brief Get a `DT_DRV_COMPAT`'s number of interrupts
+ *
+ * @param inst instance number
+ * @return number of interrupts
+ */
+#define DT_INST_NUM_IRQS(inst) DT_NUM_IRQS(DT_DRV_INST(inst))
+
+/**
  * @brief Get a `DT_DRV_COMPAT` interrupt level
  *
  * @param inst instance number
@@ -4316,7 +4324,7 @@
  * @param name lowercase-and-underscores property name
  * @param default_value a fallback value to expand to
  * @return if @p prop exists, its value as a token, i.e. without any quotes and
- *         with special characters converted to underscores. Othewise
+ *         with special characters converted to underscores. Otherwise
  *         @p default_value
  */
 #define DT_INST_STRING_TOKEN_OR(inst, name, default_value) \
@@ -4620,7 +4628,7 @@
 
 /**
  * @brief Invokes @p fn for each element of property @p prop for
- *        a `DT_DRV_COMPAT` instance with multiple arguments and a sepatator.
+ *        a `DT_DRV_COMPAT` instance with multiple arguments and a separator.
  *
  * Equivalent to
  *      DT_FOREACH_PROP_ELEM_SEP_VARGS(DT_DRV_INST(inst), prop, fn, sep,

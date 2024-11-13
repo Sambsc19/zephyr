@@ -448,6 +448,8 @@ static void usbfsotg_event_submit(const struct device *dev,
 	ret = k_mem_slab_alloc(&usbfsotg_ee_slab, (void **)&ev, K_NO_WAIT);
 	if (ret) {
 		udc_submit_event(dev, UDC_EVT_ERROR, ret);
+		LOG_ERR("Failed to allocate slab");
+		return;
 	}
 
 	ev->dev = dev;
@@ -647,6 +649,10 @@ static void usbfsotg_isr_handler(const struct device *dev)
 	if (istatus & USB_ISTAT_USBRST_MASK) {
 		base->ADDR = 0U;
 		udc_submit_event(dev, UDC_EVT_RESET, 0);
+	}
+
+	if (istatus == USB_ISTAT_SOFTOK_MASK) {
+		udc_submit_event(dev, UDC_EVT_SOF, 0);
 	}
 
 	if (istatus == USB_ISTAT_ERROR_MASK) {

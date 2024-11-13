@@ -266,11 +266,13 @@ static ALWAYS_INLINE void clock_init(void)
 #ifdef CONFIG_INIT_ENET_PLL
 	CLOCK_InitSysPll1(&sysPll1Config);
 #else
+#ifndef CONFIG_SECOND_CORE_MCUX
 	/* Bypass Sys Pll1. */
 	CLOCK_SetPllBypass(kCLOCK_PllSys1, true);
 
 	/* DeInit Sys Pll1. */
 	CLOCK_DeinitSysPll1();
+#endif
 #endif
 
 	/* Init Sys Pll2. */
@@ -286,11 +288,7 @@ static ALWAYS_INLINE void clock_init(void)
 	CLOCK_InitPfd(kCLOCK_PllSys2, kCLOCK_Pfd2, 24);
 
 	/* Init System Pll2 pfd3. */
-#if CONFIG_ETH_MCUX || CONFIG_ETH_NXP_ENET
-	CLOCK_InitPfd(kCLOCK_PllSys2, kCLOCK_Pfd3, 24);
-#else
 	CLOCK_InitPfd(kCLOCK_PllSys2, kCLOCK_Pfd3, 32);
-#endif
 
 	/* Init Sys Pll3. */
 	CLOCK_InitSysPll3();
@@ -332,16 +330,15 @@ static ALWAYS_INLINE void clock_init(void)
 	CLOCK_SetRootClock(kCLOCK_Root_M4, &rootCfg);
 #endif
 
-	/* Configure BUS using SYS_PLL3_CLK */
-#if CONFIG_ETH_MCUX || CONFIG_ETH_NXP_ENET
-	/* Configure root bus clock at 198M */
-	rootCfg.mux = kCLOCK_BUS_ClockRoot_MuxSysPll2Pfd3;
-	rootCfg.div = 2;
-	CLOCK_SetRootClock(kCLOCK_Root_Bus, &rootCfg);
-#elif defined(CONFIG_SOC_MIMXRT1176_CM7) || defined(CONFIG_SOC_MIMXRT1166_CM7)
+#if CONFIG_SOC_MIMXRT1176_CM7
 	/* Keep root bus clock at default 240M */
 	rootCfg.mux = kCLOCK_BUS_ClockRoot_MuxSysPll3Out;
 	rootCfg.div = 2;
+	CLOCK_SetRootClock(kCLOCK_Root_Bus, &rootCfg);
+#elif defined(CONFIG_SOC_MIMXRT1166_CM7)
+	/* Configure root bus clock at 200M */
+	rootCfg.mux = kCLOCK_BUS_ClockRoot_MuxSysPll1Div5;
+	rootCfg.div = 1;
 	CLOCK_SetRootClock(kCLOCK_Root_Bus, &rootCfg);
 #endif
 
@@ -538,20 +535,26 @@ static ALWAYS_INLINE void clock_init(void)
 	CLOCK_SetRootClock(kCLOCK_Root_Gpt1, &rootCfg);
 #endif
 
-#if DT_NODE_HAS_STATUS(DT_NODELABEL(usb1), okay) && CONFIG_USB_DC_NXP_EHCI
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(usb1), okay) &&\
+	(CONFIG_USB_DC_NXP_EHCI || CONFIG_UDC_NXP_EHCI)
 	CLOCK_EnableUsbhs0PhyPllClock(kCLOCK_Usb480M,
 		DT_PROP_BY_PHANDLE(DT_NODELABEL(usb1), clocks, clock_frequency));
 	CLOCK_EnableUsbhs0Clock(kCLOCK_Usb480M,
 		DT_PROP_BY_PHANDLE(DT_NODELABEL(usb1), clocks, clock_frequency));
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(usb1), okay) && CONFIG_USB_DC_NXP_EHCI
 	USB_EhciPhyInit(kUSB_ControllerEhci0, CPU_XTAL_CLK_HZ, &usbPhyConfig);
 #endif
+#endif
 
-#if DT_NODE_HAS_STATUS(DT_NODELABEL(usb2), okay) && CONFIG_USB_DC_NXP_EHCI
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(usb2), okay) &&\
+	(CONFIG_USB_DC_NXP_EHCI || CONFIG_UDC_NXP_EHCI)
 	CLOCK_EnableUsbhs1PhyPllClock(kCLOCK_Usb480M,
 		DT_PROP_BY_PHANDLE(DT_NODELABEL(usb2), clocks, clock_frequency));
 	CLOCK_EnableUsbhs1Clock(kCLOCK_Usb480M,
 		DT_PROP_BY_PHANDLE(DT_NODELABEL(usb2), clocks, clock_frequency));
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(usb1), okay) && CONFIG_USB_DC_NXP_EHCI
 	USB_EhciPhyInit(kUSB_ControllerEhci1, CPU_XTAL_CLK_HZ, &usbPhyConfig);
+#endif
 #endif
 
 #if CONFIG_IMX_USDHC

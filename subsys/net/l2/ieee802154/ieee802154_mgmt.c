@@ -37,6 +37,7 @@ enum net_verdict ieee802154_handle_beacon(struct net_if *iface,
 					  uint8_t lqi)
 {
 	struct ieee802154_context *ctx = net_if_l2_data(iface);
+	int beacon_hdr_len;
 
 	NET_DBG("Beacon received");
 
@@ -63,6 +64,10 @@ enum net_verdict ieee802154_handle_beacon(struct net_if *iface,
 				mpdu->mhr.src_addr->plain.addr.ext_addr,
 				IEEE802154_EXT_ADDR_LENGTH);
 	}
+
+	beacon_hdr_len = ieee802514_beacon_header_length(mpdu->payload, mpdu->payload_length);
+	ctx->scan_ctx->beacon_payload_len = mpdu->payload_length - beacon_hdr_len;
+	ctx->scan_ctx->beacon_payload = (uint8_t *)mpdu->payload + beacon_hdr_len;
 
 	net_mgmt_event_notify(NET_EVENT_IEEE802154_SCAN_RESULT, iface);
 
@@ -555,6 +560,7 @@ static int ieee802154_associate(uint32_t mgmt_request, struct net_if *iface,
 	if (ieee802154_radio_send(iface, pkt, pkt->buffer)) {
 		net_pkt_unref(pkt);
 		ret = -EIO;
+		k_sem_give(&ctx->scan_ctx_lock);
 		goto out;
 	}
 

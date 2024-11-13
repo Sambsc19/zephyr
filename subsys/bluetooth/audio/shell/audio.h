@@ -283,8 +283,12 @@ static void print_ltv_array(const struct shell *sh, size_t indent, const uint8_t
 		.cnt = 0U,
 		.indent = indent,
 	};
+	int err;
 
-	bt_audio_data_parse(ltv_data, ltv_data_len, print_ltv_elem, &ltv_info);
+	err = bt_audio_data_parse(ltv_data, ltv_data_len, print_ltv_elem, &ltv_info);
+	if (err != 0 && err != -ECANCELED) {
+		shell_error(sh, "%*sInvalid LTV data: %d", indent, "", err);
+	}
 }
 
 static inline char *context_bit_to_str(enum bt_audio_context context)
@@ -295,7 +299,7 @@ static inline char *context_bit_to_str(enum bt_audio_context context)
 	case BT_AUDIO_CONTEXT_TYPE_UNSPECIFIED:
 		return "Unspecified";
 	case BT_AUDIO_CONTEXT_TYPE_CONVERSATIONAL:
-		return "Converstation";
+		return "Conversational";
 	case BT_AUDIO_CONTEXT_TYPE_MEDIA:
 		return "Media";
 	case BT_AUDIO_CONTEXT_TYPE_GAME:
