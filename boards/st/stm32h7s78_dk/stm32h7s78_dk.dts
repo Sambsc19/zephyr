@@ -19,7 +19,7 @@
 		zephyr,shell-uart = &uart4;
 		zephyr,flash = &flash0;
 		zephyr,sram = &sram0;
-		zephyr,flash-controller = &mx66uw1g45;
+		zephyr,flash-controller = &mx25uw25645;
 	};
 
 	leds {
@@ -205,7 +205,7 @@
 
 	status = "okay";
 
-	mx66uw1g45: xspi-nor-flash@70000000 {
+	mx25uw25645: xspi-nor-flash@70000000 {
 		compatible = "st,stm32-xspi-nor";
 		reg = <0x70000000 DT_SIZE_M(128)>; /* 1 Gbits */
 		ospi-max-frequency = <DT_FREQ_M(50)>;

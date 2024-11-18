@@ -1,7 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # keep first
+if(CONFIG_STM32_MEMMAP)
 board_runner_args(stm32cubeprogrammer "--port=swd" "--reset-mode=hw")
+board_runner_args(stm32cubeprogrammer "--hex-file=${ZEPHYR_BASE}/build/zephyr/zephyr.hex")
+board_runner_args(stm32cubeprogrammer "--extload=MX25UW25645G_NUCLEO-H7S3L8.stldr")
+else()
+board_runner_args(stm32cubeprogrammer "--erase" "--port=swd" "--reset-mode=hw" )
+endif()
 
 board_runner_args(openocd --target-handle=_CHIPNAME.cpu0)
 
