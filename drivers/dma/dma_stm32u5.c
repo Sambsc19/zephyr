@@ -251,6 +251,8 @@ static void dma_stm32_irq_handler(const struct device *dev, uint32_t id)
 	struct dma_stm32_stream *stream;
 	uint32_t callback_arg;
 
+	LOG_DBG("DMA IRQ Handler called for channel %d", id);
+
 	__ASSERT_NO_MSG(id < config->max_streams);
 
 	stream = &config->streams[id];
@@ -502,10 +504,17 @@ static int dma_stm32_configure(const struct device *dev,
 
 	LL_DMA_Init(dma, dma_stm32_id_to_stream(id), &DMA_InitStruct);
 
+	LOG_DBG("Enabling DMA TC, HT, and error interrupts for channel %d", id);
+
 	LL_DMA_EnableIT_TC(dma, dma_stm32_id_to_stream(id));
 	LL_DMA_EnableIT_USE(dma, dma_stm32_id_to_stream(id));
 	LL_DMA_EnableIT_ULE(dma, dma_stm32_id_to_stream(id));
 	LL_DMA_EnableIT_DTE(dma, dma_stm32_id_to_stream(id));
+
+	LOG_DBG("Checking DMA IRQ flags for channel %d", id);
+	LOG_DBG("TC: %d, HT: %d, DTE: %d", dma_stm32_is_tc_active(dma, id),
+									dma_stm32_is_ht_active(dma, id),
+									dma_stm32_is_dte_active(dma, id));
 
 	/* Enable Half-Transfer irq if circular mode is enabled */
 	if (config->head_block->source_reload_en) {
@@ -730,6 +739,7 @@ static const struct dma_driver_api dma_funcs = {
 			    dma_stm32_irq_##dma##_##chan,		\
 			    DEVICE_DT_INST_GET(dma), 0);		\
 		irq_enable(DT_INST_IRQ_BY_IDX(dma, chan, irq));		\
+		LOG_DBG("IRQ for DMA channel %d connected and enabled.", chan); \
 	} while (0)
 
 /*

@@ -76,7 +76,7 @@
 
 &pll {
 	div-m = <12>;
-	mul-n = <200>;
+	mul-n = <400>;
 	div-p = <2>;
 	div-q = <2>;
 	div-r = <2>;
@@ -88,9 +88,9 @@
 
 &rcc {
 	clocks = <&pll>;
-	clock-frequency = <DT_FREQ_M(200)>;
+	clock-frequency = <DT_FREQ_M(400)>;
 	dcpre = <1>;
-	hpre = <1>;
+	hpre = <2>;
 	ppre1 = <2>;
 	ppre2 = <2>;
 	ppre4 = <2>;
